@@ -173,6 +173,7 @@ async function loadGroups() {
       const li = document.createElement('li');
       li.className = 'bg-slate-700 p-3 rounded shadow text-white cursor-pointer';
       li.textContent = gm.groups.name;
+      li.title = gm.group_id; // shows on hover
 
       // 🎯 2. Add click behavior
       li.onclick = () => {
