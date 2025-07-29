@@ -78,15 +78,21 @@
   <p id="group-join-code" class="text-xs text-gray-300 break-all mb-4"></p>
 
 
-  <!-- Add Movie Form -->
-  <div class="mb-4 space-y-2">
-    <input id="new-movie-title" type="text" placeholder="Add a movie title"
-      class="w-full px-4 py-2 rounded bg-gray-100 text-black placeholder-gray-500" />
-    <button id="add-movie-btn" type="button"
-      class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded transition">
-      ➕ Add Movie
-    </button>
-  </div>
+<!-- Add Movie with TMDB Search -->
+<div class="mb-4 space-y-2">
+  <input id="new-movie-title" type="text" placeholder="Search for a movie title"
+    class="w-full px-4 py-2 rounded bg-gray-100 text-black placeholder-gray-500" />
+
+  <!-- Search Results List -->
+  <ul id="tmdb-results" class="space-y-2 bg-slate-700 p-2 rounded shadow hidden"></ul>
+
+  <!-- Fallback Add Button -->
+  <button id="add-movie-manual-btn" type="button"
+    class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded transition">
+    ➕ Add Movie Manually
+  </button>
+</div>
+
 
   <!-- Movie List -->
   <ul id="movie-list" class="space-y-2"></ul>
