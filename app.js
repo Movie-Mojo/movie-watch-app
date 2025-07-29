@@ -2,7 +2,7 @@
 const SUPABASE_URL = 'https://fhynhdekctvstiolykgo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoeW5oZGVrY3R2c3Rpb2x5a2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MDQxMjMsImV4cCI6MjA2OTM4MDEyM30.JdV5Qy8135nCp1jnozAaZ5tcEE2CaMlBUZjnNEg0tvM';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Get DOM elements
 const emailInput = document.getElementById('email');
@@ -17,7 +17,7 @@ const groupList = document.getElementById('group-list');
 
 // Login
 loginBtn.onclick = async () => {
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabaseClient.auth.signInWithPassword({
     email: emailInput.value,
     password: passwordInput.value,
   });
@@ -30,7 +30,7 @@ loginBtn.onclick = async () => {
 
 // Signup
 signupBtn.onclick = async () => {
-  const { error } = await supabase.auth.signUp({
+  const { error } = await supabaseClient.auth.signUp({
     email: emailInput.value,
     password: passwordInput.value,
   });
@@ -43,7 +43,7 @@ signupBtn.onclick = async () => {
 
 // Logout
 logoutBtn.onclick = async () => {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   location.reload();
 };
 
@@ -51,7 +51,7 @@ logoutBtn.onclick = async () => {
 async function loadGroups() {
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
   if (!user) return;
 
   authSection.classList.add('hidden');
@@ -82,7 +82,7 @@ async function loadGroups() {
 }
 
 // Check on load
-supabase.auth.getSession().then(({ data: { session } }) => {
+supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     loadGroups();
   }
