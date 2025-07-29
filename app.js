@@ -179,6 +179,7 @@ async function loadGroups() {
       li.onclick = () => {
         currentGroupId = gm.group_id;
         groupNameTitle.textContent = `Group: ${gm.groups.name}`;
+        document.getElementById('group-join-code').textContent = `Join Code: ${gm.group_id}`;
         mainSection.classList.add('hidden');
         groupDetailSection.classList.remove('hidden');
         loadMovies();
