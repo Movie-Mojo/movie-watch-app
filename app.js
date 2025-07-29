@@ -24,6 +24,14 @@ const authSection = document.getElementById('auth-section');
 const mainSection = document.getElementById('main-section');
 const groupList = document.getElementById('group-list');
 
+let currentGroupId = null;
+
+backToGroupsBtn.onclick = () => {
+  groupDetailSection.classList.add('hidden');
+  mainSection.classList.remove('hidden');
+  currentGroupId = null;
+};
+
 // Login
 loginBtn.onclick = async () => {
   const { error } = await supabaseClient.auth.signInWithPassword({
@@ -98,7 +106,7 @@ createGroupBtn.onclick = async () => {
 // Load Watch Groups
 async function loadGroups() {
   const {
-    data: { user },
+    data: { user }
   } = await supabaseClient.auth.getUser();
   if (!user) return;
 
@@ -111,6 +119,7 @@ async function loadGroups() {
     .eq('user_id', user.id);
 
   groupList.innerHTML = '';
+
   if (error) {
     groupList.innerHTML = '<li>Error loading groups</li>';
     console.error(error);
@@ -121,13 +130,104 @@ async function loadGroups() {
     groupList.innerHTML = '<li class="text-sm text-gray-300">No groups yet.</li>';
   } else {
     data.forEach((gm) => {
+      // 🎯 1. Create <li> for each group
       const li = document.createElement('li');
-      li.className = 'bg-slate-700 p-3 rounded shadow text-white';
+      li.className = 'bg-slate-700 p-3 rounded shadow text-white cursor-pointer';
       li.textContent = gm.groups.name;
+
+      // 🎯 2. Add click behavior
+      li.onclick = () => {
+        currentGroupId = gm.group_id;
+        groupNameTitle.textContent = `Group: ${gm.groups.name}`;
+        mainSection.classList.add('hidden');
+        groupDetailSection.classList.remove('hidden');
+        loadMovies();
+      };
+
+      // 🎯 3. Add <li> to the group list
       groupList.appendChild(li);
     });
   }
 }
+
+async function loadMovies() {
+  const { data, error } = await supabaseClient
+    .from('group_movies')
+    .select('id, watched, movie_id, movies(title)')
+    .eq('group_id', currentGroupId)
+    .order('added_at', { ascending: false });
+
+  movieList.innerHTML = '';
+
+  if (error) {
+    movieList.innerHTML = '<li>Error loading movies.</li>';
+    return;
+  }
+
+  if (data.length === 0) {
+    movieList.innerHTML = '<li class="text-sm text-gray-300">No movies yet.</li>';
+  } else {
+    data.forEach((entry) => {
+      const li = document.createElement('li');
+      li.className = `bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center`;
+
+      const title = document.createElement('span');
+      title.textContent = entry.movies.title;
+
+      const toggle = document.createElement('button');
+      toggle.textContent = entry.watched ? '✅ Watched' : '👀 To Watch';
+      toggle.className = entry.watched
+        ? 'text-green-400 hover:underline'
+        : 'text-yellow-400 hover:underline';
+
+      toggle.onclick = async () => {
+        await supabaseClient
+          .from('group_movies')
+          .update({ watched: !entry.watched })
+          .eq('id', entry.id);
+        loadMovies();
+      };
+
+      li.appendChild(title);
+      li.appendChild(toggle);
+      movieList.appendChild(li);
+    });
+  }
+}
+
+addMovieBtn.onclick = async () => {
+  const title = newMovieTitleInput.value.trim();
+  if (!title || !currentGroupId) return;
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  // Step 1: Insert into `movies` (or find existing)
+  const { data: movie, error: movieError } = await supabaseClient
+    .from('movies')
+    .insert({ title })
+    .select()
+    .single();
+
+  if (movieError) {
+    alert("Failed to add movie.");
+    console.error(movieError);
+    return;
+  }
+
+  // Step 2: Link movie to group
+  await supabaseClient
+    .from('group_movies')
+    .insert({
+      group_id: currentGroupId,
+      movie_id: movie.id,
+      added_by: user.id
+    });
+
+  newMovieTitleInput.value = '';
+  loadMovies();
+};
 
 // Check on load
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
