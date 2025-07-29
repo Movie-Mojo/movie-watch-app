@@ -192,7 +192,6 @@ async function loadMovies() {
     .from('group_movies')
     .select('id, watched, movie_id, movies(title)')
     .eq('group_id', currentGroupId)
-    .order('added_at', { ascending: false });
 
   movieList.innerHTML = '';
 
@@ -204,6 +203,7 @@ async function loadMovies() {
   if (data.length === 0) {
     movieList.innerHTML = '<li class="text-sm text-gray-300">No movies yet.</li>';
   } else {
+    data.sort((a, b) => a.watched - b.watched); // 👈 custom sort
     data.forEach((entry) => {
       const li = document.createElement('li');
       li.className = `bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center`;
