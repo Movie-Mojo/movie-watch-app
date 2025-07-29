@@ -57,20 +57,20 @@ signupBtn.onclick = async () => {
   const password = passwordInput.value;
 
   if (!email || !password) {
-    alert("Email and password required.");
+    alert("Missing email or password");
     return;
   }
 
-  const { error } = await supabaseClient.auth.signUp({
+  const { data, error } = await supabaseClient.auth.signUp({
     email,
     password
   });
 
   if (error) {
-    console.error("Signup error:", error);
-    alert(error.message || "Signup failed.");
+    console.error("❌ Signup Error Object:", error);
+    alert("Signup failed: " + error.message);
   } else {
-    alert("Account created. Please wait for approval.");
+    alert("Account created! Please wait for approval.");
   }
 };
 
