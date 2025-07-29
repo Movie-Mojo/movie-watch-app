@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Watch App</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script defer src="app.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div id="app" class="p-4 max-w-md mx-auto">
+    <h1 class="text-2xl font-bold text-center mb-4">🎬 Movie Watch</h1>
+
+    <!-- Auth UI -->
+    <div id="auth-section">
+      <input id="email" type="email" placeholder="Email" class="block w-full mb-2" />
+      <input id="password" type="password" placeholder="Password" class="block w-full mb-2" />
+      <button id="login-btn" class="bg-blue-600 text-white w-full py-2 rounded mb-2">Login</button>
+      <button id="signup-btn" class="bg-gray-600 text-white w-full py-2 rounded">Sign Up</button>
+    </div>
+
+    <!-- Main UI (hidden until login) -->
+    <div id="main-section" class="hidden">
+      <h2 class="text-xl mb-2">Your Watch Groups</h2>
+      <ul id="group-list" class="mb-4"></ul>
+      <button id="logout-btn" class="bg-red-500 text-white w-full py-2 rounded">Logout</button>
+    </div>
+  </div>
+</body>
+</html>
