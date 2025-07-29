@@ -58,7 +58,7 @@ createGroupBtn.onclick = async () => {
 
   const {
     data: { user }
-  } = await client.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
   // Step 1: Create the group
   const { data: groupData, error: groupError } = await supabaseClient
