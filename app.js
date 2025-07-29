@@ -337,8 +337,12 @@ addMovieManualBtn.onclick = async () => {
   loadMovies();
 };
 
-supabaseClient.auth.getSession().then(({ data: { session } }) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
   if (session) {
     loadGroups();
+  } else {
+    authSection.classList.remove('hidden');
+    mainSection.classList.add('hidden');
+    groupDetailSection.classList.add('hidden');
   }
 });
