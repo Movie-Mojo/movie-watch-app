@@ -61,7 +61,7 @@ createGroupBtn.onclick = async () => {
   } = await client.auth.getUser();
 
   // Step 1: Create the group
-  const { data: groupData, error: groupError } = await client
+  const { data: groupData, error: groupError } = await supabaseClient
     .from('groups')
     .insert({ name: groupName, created_by: user.id })
     .select()
@@ -74,7 +74,7 @@ createGroupBtn.onclick = async () => {
   }
 
   // Step 2: Add user as a member of the group
-  const { error: memberError } = await client
+  const { error: memberError } = await supabaseClient
     .from('group_members')
     .insert({ user_id: user.id, group_id: groupData.id });
 
@@ -98,7 +98,7 @@ async function loadGroups() {
   authSection.classList.add('hidden');
   mainSection.classList.remove('hidden');
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('group_members')
     .select('group_id, groups(name)')
     .eq('user_id', user.id);
