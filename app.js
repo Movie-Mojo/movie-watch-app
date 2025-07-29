@@ -49,6 +49,45 @@ logoutBtn.onclick = async () => {
   location.reload();
 };
 
+createGroupBtn.onclick = async () => {
+  const groupName = newGroupNameInput.value.trim();
+  if (!groupName) {
+    alert("Please enter a group name.");
+    return;
+  }
+
+  const {
+    data: { user }
+  } = await client.auth.getUser();
+
+  // Step 1: Create the group
+  const { data: groupData, error: groupError } = await client
+    .from('groups')
+    .insert({ name: groupName, created_by: user.id })
+    .select()
+    .single();
+
+  if (groupError) {
+    alert("Error creating group.");
+    console.error(groupError);
+    return;
+  }
+
+  // Step 2: Add user as a member of the group
+  const { error: memberError } = await client
+    .from('group_members')
+    .insert({ user_id: user.id, group_id: groupData.id });
+
+  if (memberError) {
+    alert("Group created, but failed to add you as a member.");
+    console.error(memberError);
+    return;
+  }
+
+  newGroupNameInput.value = '';
+  await loadGroups();
+};
+
 // Load Watch Groups
 async function loadGroups() {
   const {
