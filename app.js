@@ -208,8 +208,24 @@ async function loadMovies() {
       const li = document.createElement('li');
       li.className = `bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center`;
 
-      const title = document.createElement('span');
-      title.textContent = entry.movies.title;
+const content = document.createElement('div');
+content.className = 'flex items-center gap-3';
+
+if (entry.movies.poster_url) {
+  const poster = document.createElement('img');
+  poster.src = entry.movies.poster_url;
+  poster.className = 'w-12 rounded shadow';
+  content.appendChild(poster);
+}
+
+const textBlock = document.createElement('div');
+textBlock.innerHTML = `
+  <div class="font-semibold">${entry.movies.title}</div>
+  <div class="text-xs text-gray-300">${entry.movies.release_year || ''}</div>
+`;
+
+content.appendChild(textBlock);
+
 
       const toggle = document.createElement('button');
       toggle.textContent = entry.watched ? '✅ Watched' : '👀 To Watch';
@@ -225,7 +241,7 @@ async function loadMovies() {
         loadMovies();
       };
 
-      li.appendChild(title);
+      li.appendChild(content);
       li.appendChild(toggle);
       movieList.appendChild(li);
     });
