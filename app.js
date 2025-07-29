@@ -88,6 +88,7 @@ createGroupBtn.onclick = async () => {
     alert("Please enter a group name.");
     return;
   }
+};
   joinGroupBtn.onclick = async () => {
     const code = joinGroupCodeInput.value.trim();
     if (!code) return;
