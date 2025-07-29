@@ -40,13 +40,25 @@
 
     <!-- Main UI (hidden until login) -->
     <div id="main-section" class="hidden mt-8">
-      <h2 class="text-2xl font-bold mb-4">Your Watch Groups</h2>
-      <ul id="group-list" class="space-y-2"></ul>
-      <button id="logout-btn" type="button"
-        class="mt-6 w-full py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded transition">
-        Logout
-      </button>
-    </div>
+  <h2 class="text-2xl font-bold mb-4">Your Watch Groups</h2>
+
+  <!-- Create Group Form -->
+  <div class="mb-4 space-y-2">
+    <input id="new-group-name" type="text" placeholder="New group name"
+      class="w-full px-4 py-2 rounded bg-gray-100 text-black placeholder-gray-500 focus:ring-2 focus:ring-cyan-400" />
+    <button id="create-group-btn" type="button"
+      class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded transition">
+      ➕ Create Group
+    </button>
+  </div>
+
+  <ul id="group-list" class="space-y-2"></ul>
+
+  <button id="logout-btn" type="button"
+    class="mt-6 w-full py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded transition">
+    Logout
+  </button>
+</div>
   </main>
 
   <footer class="fixed bottom-0 w-full text-center text-xs text-gray-400 py-4 bg-slate-900/80 backdrop-blur-md">
