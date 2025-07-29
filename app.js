@@ -1,3 +1,10 @@
+const groupDetailSection = document.getElementById('group-detail-section');
+const backToGroupsBtn = document.getElementById('back-to-groups');
+const groupNameTitle = document.getElementById('group-name-title');
+const movieList = document.getElementById('movie-list');
+const newMovieTitleInput = document.getElementById('new-movie-title');
+const addMovieBtn = document.getElementById('add-movie-btn');
+
 const createGroupBtn = document.getElementById('create-group-btn');
 const newGroupNameInput = document.getElementById('new-group-name');
 // 🔐 Replace these with your actual Supabase project credentials:
