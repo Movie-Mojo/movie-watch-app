@@ -190,7 +190,7 @@ async function loadGroups() {
 async function loadMovies() {
   const { data, error } = await supabaseClient
     .from('group_movies')
-    .select('id, watched, movie_id, movies(title)')
+    .select('id, watched, movie_id, movies(title, poster_url, release_year)')
     .eq('group_id', currentGroupId)
 
   movieList.innerHTML = '';
