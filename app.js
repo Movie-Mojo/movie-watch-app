@@ -241,8 +241,28 @@ content.appendChild(textBlock);
         loadMovies();
       };
 
-      li.appendChild(content);
-      li.appendChild(toggle);
+      const controls = document.createElement('div');
+controls.className = 'flex items-center gap-3';
+
+controls.appendChild(toggle);
+
+// 🗑 Delete button
+const delBtn = document.createElement('button');
+delBtn.innerHTML = '🗑';
+delBtn.title = 'Delete movie';
+delBtn.className = 'text-red-400 hover:text-red-500 text-lg';
+delBtn.onclick = async () => {
+  if (confirm(`Delete "${entry.movies.title}" from group?`)) {
+    await supabaseClient.from('group_movies').delete().eq('id', entry.id);
+    loadMovies();
+  }
+};
+
+controls.appendChild(delBtn);
+
+li.appendChild(content);
+li.appendChild(controls);
+
       movieList.appendChild(li);
     });
   }
