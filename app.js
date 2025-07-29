@@ -73,6 +73,42 @@ createGroupBtn.onclick = async () => {
     alert("Please enter a group name.");
     return;
   }
+  joinGroupBtn.onclick = async () => {
+  const code = joinGroupCodeInput.value.trim();
+  if (!code) return;
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  // Check if group exists
+  const { data: group, error } = await supabaseClient
+    .from('groups')
+    .select('id, name')
+    .eq('id', code)
+    .single();
+
+  if (error || !group) {
+    alert("Group not found.");
+    return;
+  }
+
+  // Add user to group_members
+  const { error: memberError } = await supabaseClient
+    .from('group_members')
+    .insert({ user_id: user.id, group_id: group.id });
+
+  if (memberError) {
+    alert("You're already a member of this group or join failed.");
+    console.error(memberError);
+    return;
+  }
+
+  joinGroupCodeInput.value = '';
+  alert(`Joined group: ${group.name}`);
+  loadGroups();
+};
+
 
   const {
     data: { user }
