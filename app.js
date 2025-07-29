@@ -1,3 +1,6 @@
+const joinGroupCodeInput = document.getElementById('join-group-code');
+const joinGroupBtn = document.getElementById('join-group-btn');
+
 const groupDetailSection = document.getElementById('group-detail-section');
 const backToGroupsBtn = document.getElementById('back-to-groups');
 const groupNameTitle = document.getElementById('group-name-title');
