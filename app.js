@@ -1,3 +1,4 @@
+// Core Setup
 const joinGroupCodeInput = document.getElementById('join-group-code');
 const joinGroupBtn = document.getElementById('join-group-btn');
 
@@ -6,17 +7,18 @@ const backToGroupsBtn = document.getElementById('back-to-groups');
 const groupNameTitle = document.getElementById('group-name-title');
 const movieList = document.getElementById('movie-list');
 const newMovieTitleInput = document.getElementById('new-movie-title');
-const addMovieBtn = document.getElementById('add-movie-btn');
+const tmdbResultsList = document.getElementById('tmdb-results');
+const addMovieManualBtn = document.getElementById('add-movie-manual-btn');
 
 const createGroupBtn = document.getElementById('create-group-btn');
 const newGroupNameInput = document.getElementById('new-group-name');
-// 🔐 Replace these with your actual Supabase project credentials:
 const SUPABASE_URL = 'https://fhynhdekctvstiolykgo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoeW5oZGVrY3R2c3Rpb2x5a2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MDQxMjMsImV4cCI6MjA2OTM4MDEyM30.JdV5Qy8135nCp1jnozAaZ5tcEE2CaMlBUZjnNEg0tvM';
+const TMDB_API_KEY = '432c97c5d26a7a17fd6f4897a4cf4649'; // Replace with your actual TMDB API key
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Get DOM elements
+// Auth Elements
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login-btn');
@@ -28,6 +30,7 @@ const mainSection = document.getElementById('main-section');
 const groupList = document.getElementById('group-list');
 
 let currentGroupId = null;
+let tmdbTimeout;
 
 backToGroupsBtn.onclick = () => {
   groupDetailSection.classList.add('hidden');
@@ -67,6 +70,7 @@ logoutBtn.onclick = async () => {
   location.reload();
 };
 
+// Create Group
 createGroupBtn.onclick = async () => {
   const groupName = newGroupNameInput.value.trim();
   if (!groupName) {
@@ -74,47 +78,43 @@ createGroupBtn.onclick = async () => {
     return;
   }
   joinGroupBtn.onclick = async () => {
-  const code = joinGroupCodeInput.value.trim();
-  if (!code) return;
+    const code = joinGroupCodeInput.value.trim();
+    if (!code) return;
+
+    const {
+      data: { user }
+    } = await supabaseClient.auth.getUser();
+
+    const { data: group, error } = await supabaseClient
+      .from('groups')
+      .select('id, name')
+      .eq('id', code)
+      .single();
+
+    if (error || !group) {
+      alert("Group not found.");
+      return;
+    }
+
+    const { error: memberError } = await supabaseClient
+      .from('group_members')
+      .insert({ user_id: user.id, group_id: group.id });
+
+    if (memberError) {
+      alert("You're already a member of this group or join failed.");
+      console.error(memberError);
+      return;
+    }
+
+    joinGroupCodeInput.value = '';
+    alert(`Joined group: ${group.name}`);
+    loadGroups();
+  };
 
   const {
     data: { user }
   } = await supabaseClient.auth.getUser();
 
-  // Check if group exists
-  const { data: group, error } = await supabaseClient
-    .from('groups')
-    .select('id, name')
-    .eq('id', code)
-    .single();
-
-  if (error || !group) {
-    alert("Group not found.");
-    return;
-  }
-
-  // Add user to group_members
-  const { error: memberError } = await supabaseClient
-    .from('group_members')
-    .insert({ user_id: user.id, group_id: group.id });
-
-  if (memberError) {
-    alert("You're already a member of this group or join failed.");
-    console.error(memberError);
-    return;
-  }
-
-  joinGroupCodeInput.value = '';
-  alert(`Joined group: ${group.name}`);
-  loadGroups();
-};
-
-
-  const {
-    data: { user }
-  } = await supabaseClient.auth.getUser();
-
-  // Step 1: Create the group
   const { data: groupData, error: groupError } = await supabaseClient
     .from('groups')
     .insert({ name: groupName, created_by: user.id })
@@ -127,7 +127,6 @@ createGroupBtn.onclick = async () => {
     return;
   }
 
-  // Step 2: Add user as a member of the group
   const { error: memberError } = await supabaseClient
     .from('group_members')
     .insert({ user_id: user.id, group_id: groupData.id });
@@ -169,13 +168,11 @@ async function loadGroups() {
     groupList.innerHTML = '<li class="text-sm text-gray-300">No groups yet.</li>';
   } else {
     data.forEach((gm) => {
-      // 🎯 1. Create <li> for each group
       const li = document.createElement('li');
       li.className = 'bg-slate-700 p-3 rounded shadow text-white cursor-pointer';
       li.textContent = gm.groups.name;
-      li.title = gm.group_id; // shows on hover
+      li.title = gm.group_id;
 
-      // 🎯 2. Add click behavior
       li.onclick = () => {
         currentGroupId = gm.group_id;
         groupNameTitle.textContent = `Group: ${gm.groups.name}`;
@@ -185,7 +182,6 @@ async function loadGroups() {
         loadMovies();
       };
 
-      // 🎯 3. Add <li> to the group list
       groupList.appendChild(li);
     });
   }
@@ -236,7 +232,80 @@ async function loadMovies() {
   }
 }
 
-addMovieBtn.onclick = async () => {
+newMovieTitleInput.addEventListener('input', () => {
+  clearTimeout(tmdbTimeout);
+  const query = newMovieTitleInput.value.trim();
+  if (!query) {
+    tmdbResultsList.classList.add('hidden');
+    tmdbResultsList.innerHTML = '';
+    return;
+  }
+  tmdbTimeout = setTimeout(() => searchTMDB(query), 400);
+});
+
+async function searchTMDB(query) {
+  tmdbResultsList.innerHTML = '<li class="text-sm text-gray-300">Searching...</li>';
+  tmdbResultsList.classList.remove('hidden');
+
+  const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+  const json = await res.json();
+
+  if (!json.results || json.results.length === 0) {
+    tmdbResultsList.innerHTML = '<li class="text-sm text-red-400">No matches found</li>';
+    return;
+  }
+
+  tmdbResultsList.innerHTML = '';
+  json.results.slice(0, 5).forEach(movie => {
+    const li = document.createElement('li');
+    li.className = 'cursor-pointer hover:bg-slate-600 p-2 rounded flex items-center gap-3';
+    li.innerHTML = `
+      ${movie.poster_path ? `<img src="https://image.tmdb.org/t/p/w92${movie.poster_path}" class="w-10 rounded" />` : ''}
+      <div>
+        <div class="font-semibold">${movie.title}</div>
+        <div class="text-xs text-gray-300">${movie.release_date?.split('-')[0] || 'N/A'}</div>
+      </div>
+    `;
+    li.onclick = () => addMovieFromTMDB(movie);
+    tmdbResultsList.appendChild(li);
+  });
+}
+
+async function addMovieFromTMDB(movie) {
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  const { data: insertedMovie, error } = await supabaseClient
+    .from('movies')
+    .insert({
+      title: movie.title,
+      tmdb_id: movie.id.toString(),
+      release_year: parseInt(movie.release_date?.split('-')[0]) || null,
+      poster_url: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null
+    })
+    .select()
+    .single();
+
+  if (error) {
+    alert("Failed to add movie.");
+    console.error(error);
+    return;
+  }
+
+  await supabaseClient.from('group_movies').insert({
+    group_id: currentGroupId,
+    movie_id: insertedMovie.id,
+    added_by: user.id
+  });
+
+  newMovieTitleInput.value = '';
+  tmdbResultsList.innerHTML = '';
+  tmdbResultsList.classList.add('hidden');
+  loadMovies();
+}
+
+addMovieManualBtn.onclick = async () => {
   const title = newMovieTitleInput.value.trim();
   if (!title || !currentGroupId) return;
 
@@ -244,7 +313,6 @@ addMovieBtn.onclick = async () => {
     data: { user }
   } = await supabaseClient.auth.getUser();
 
-  // Step 1: Insert into `movies` (or find existing)
   const { data: movie, error: movieError } = await supabaseClient
     .from('movies')
     .insert({ title })
@@ -252,25 +320,23 @@ addMovieBtn.onclick = async () => {
     .single();
 
   if (movieError) {
-    alert("Failed to add movie.");
+    alert("Failed to add movie manually.");
     console.error(movieError);
     return;
   }
 
-  // Step 2: Link movie to group
-  await supabaseClient
-    .from('group_movies')
-    .insert({
-      group_id: currentGroupId,
-      movie_id: movie.id,
-      added_by: user.id
-    });
+  await supabaseClient.from('group_movies').insert({
+    group_id: currentGroupId,
+    movie_id: movie.id,
+    added_by: user.id
+  });
 
   newMovieTitleInput.value = '';
+  tmdbResultsList.innerHTML = '';
+  tmdbResultsList.classList.add('hidden');
   loadMovies();
 };
 
-// Check on load
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     loadGroups();
