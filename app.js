@@ -53,16 +53,27 @@ loginBtn.onclick = async () => {
 
 // Signup
 signupBtn.onclick = async () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    alert("Email and password required.");
+    return;
+  }
+
   const { error } = await supabaseClient.auth.signUp({
-    email: emailInput.value,
-    password: passwordInput.value,
+    email,
+    password
   });
+
   if (error) {
-    alert(error.message);
+    console.error("Signup error:", error);
+    alert(error.message || "Signup failed.");
   } else {
-    alert('Account created! Now log in.');
+    alert("Account created. Please wait for approval.");
   }
 };
+
 
 // Logout
 logoutBtn.onclick = async () => {
