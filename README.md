@@ -33,11 +33,11 @@ The app uses Supabase for authentication and database management, and TMDB for m
 
 ### Group Detail View
 
-![Group Detail View](./Screenshot%202025-07-30%20145832.png)
+![Group Detail View](./src/Screenshot%202025-07-30%20145832.png)
 
 ### Watch Groups Dashboard
 
-![Group List View](./Screenshot%202025-07-30%20145640.png)
+![Group List View](./src/Screenshot%202025-07-30%20145640.png)
 
 ---
 
