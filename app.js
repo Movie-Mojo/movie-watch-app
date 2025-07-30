@@ -197,8 +197,12 @@ async function loadGroups() {
       };
 
       info.innerHTML = `
-        <div class="font-semibold">${group.group_name}</div>
-        <div class="text-xs text-gray-300">${group.member_count} member${group.member_count === 1 ? '' : 's'}</div>
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="font-semibold">${group.group_name}</div>
+            <div class="text-xs text-gray-400">${group.member_count} member(s)</div>
+          </div>
+        </div>
       `;
 
       // Action button
