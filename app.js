@@ -164,9 +164,18 @@ async function loadGroups() {
   authSection.classList.add('hidden');
   mainSection.classList.remove('hidden');
 
+  // Get groups the user is a member of, including group name and creator
   const { data, error } = await supabaseClient
     .from('group_members')
-    .select('group_id, groups(name)')
+    .select(`
+      group_id,
+      groups (
+        id,
+        name,
+        created_by,
+        group_members(count)
+      )
+    `)
     .eq('user_id', user.id);
 
   groupList.innerHTML = '';
@@ -181,22 +190,82 @@ async function loadGroups() {
     groupList.innerHTML = '<li class="text-sm text-gray-300">No groups yet.</li>';
   } else {
     data.forEach((gm) => {
-      const li = document.createElement('li');
-      li.className = 'bg-slate-700 p-3 rounded shadow text-white cursor-pointer';
-      li.textContent = gm.groups.name;
-      li.title = gm.group_id;
+      const group = gm.groups;
 
-      li.onclick = () => {
+      const li = document.createElement('li');
+      li.className = 'bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center';
+
+      // Main info block (group name and member count)
+      const info = document.createElement('div');
+      info.className = 'cursor-pointer';
+      info.title = gm.group_id;
+      info.onclick = () => {
         currentGroupId = gm.group_id;
-        groupNameTitle.textContent = `Group: ${gm.groups.name}`;
+        groupNameTitle.textContent = `Group: ${group.name}`;
         document.getElementById('group-join-code').textContent = `Join Code: ${gm.group_id}`;
         mainSection.classList.add('hidden');
         groupDetailSection.classList.remove('hidden');
         loadMovies();
       };
 
+      const memberCount = group.group_members.length || 0;
+
+      info.innerHTML = `
+        <div class="font-semibold">${group.name}</div>
+        <div class="text-xs text-gray-300">${memberCount} member${memberCount === 1 ? '' : 's'}</div>
+      `;
+
+      // Action button
+      const actionBtn = document.createElement('button');
+      actionBtn.className = 'text-sm text-red-400 hover:text-red-500';
+
+      if (group.created_by === user.id) {
+        actionBtn.textContent = '🗑 Delete';
+        actionBtn.title = 'Delete group';
+        actionBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete "${group.name}" and all its data?`)) {
+            await deleteGroup(gm.group_id);
+            loadGroups();
+          }
+        };
+      } else {
+        actionBtn.textContent = '🚪 Leave';
+        actionBtn.title = 'Leave group';
+        actionBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (confirm(`Leave group "${group.name}"?`)) {
+            await supabaseClient
+              .from('group_members')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('group_id', gm.group_id);
+            loadGroups();
+          }
+        };
+      }
+
+      li.appendChild(info);
+      li.appendChild(actionBtn);
       groupList.appendChild(li);
     });
+  }
+}
+
+
+// Delete Watch Groups
+async function deleteGroup(groupId) {
+  try {
+    // Delete related data first
+    await supabaseClient.from('group_movies').delete().eq('group_id', groupId);
+    await supabaseClient.from('group_members').delete().eq('group_id', groupId);
+
+    // Attempt to delete the group
+    const { error } = await supabaseClient.from('groups').delete().eq('id', groupId);
+    if (error) throw error;
+  } catch (err) {
+    alert("You must be the group creator to delete this group.");
+    console.error(err.message);
   }
 }
 
