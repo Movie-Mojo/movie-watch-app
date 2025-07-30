@@ -8,7 +8,7 @@
 **Movie Mojo** is a mobile-friendly web application designed to let friends or private groups:
 
 - Create shared watchlists
-- Track and rate movies together
+- Track movies together
 - Add movies via **TMDB integration** or manual input
 - Mark movies as "Watched" or "To Watch"
 - Collaborate in real-time inside private groups
