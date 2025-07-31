@@ -1,19 +1,19 @@
 {
   "name": "Movie Mojo",
   "short_name": "MovieMojo",
-  "start_url": "/",
+  "start_url": "/moviemojo.github.io/",
   "display": "standalone",
   "background_color": "#111827",
   "theme_color": "#06b6d4",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/moviemojo.github.io/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/moviemojo.github.io/icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
