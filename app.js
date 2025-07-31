@@ -18,6 +18,7 @@ const TMDB_API_KEY = '432c97c5d26a7a17fd6f4897a4cf4649'; // Replace with your ac
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
 // Auth Elements
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
@@ -254,10 +255,11 @@ async function deleteGroup(groupId) {
   }
 }
 
+// Load Movies
 async function loadMovies() {
   const { data, error } = await supabaseClient
     .from('group_movies')
-    .select('id, watched, movie_id, movies(title, poster_url, release_year)')
+    .select('id, watched, movie_id, movies(title, poster_url, release_year, tmdb_id)')
     .eq('group_id', currentGroupId)
 
   movieList.innerHTML = '';
@@ -270,7 +272,7 @@ async function loadMovies() {
   if (data.length === 0) {
     movieList.innerHTML = '<li class="text-sm text-gray-300">No movies yet.</li>';
   } else {
-    data.sort((a, b) => a.watched - b.watched); // 👈 custom sort
+    data.sort((a, b) => a.watched - b.watched); 
     data.forEach((entry) => {
       const li = document.createElement('li');
       li.className = `bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center`;
@@ -291,6 +293,33 @@ textBlock.innerHTML = `
   <div class="text-xs text-gray-300">${entry.movies.release_year || ''}</div>
 `;
 
+// Add streaming providers
+if (entry.movies.tmdb_id) {
+  fetch(`https://api.themoviedb.org/3/movie/${entry.movies.tmdb_id}/watch/providers?api_key=${TMDB_API_KEY}`)
+    .then(res => res.json())
+    .then(json => {
+      const providers = json.results?.US?.flatrate || [];
+      if (providers.length > 0) {
+        const providerContainer = document.createElement('div');
+        providerContainer.className = 'flex gap-2 mt-1';
+
+        providers.forEach(provider => {
+          const logo = document.createElement('img');
+          logo.src = `https://image.tmdb.org/t/p/w45${provider.logo_path}`;
+          logo.alt = provider.provider_name;
+          logo.title = provider.provider_name;
+          logo.className = 'w-6 h-6 rounded';
+          providerContainer.appendChild(logo);
+        });
+
+        textBlock.appendChild(providerContainer);
+      }
+    })
+    .catch(err => {
+      console.error(`Failed to load watch providers for ${entry.movies.title}`, err);
+    });
+}
+      
 content.appendChild(textBlock);
 
 
@@ -346,6 +375,7 @@ newMovieTitleInput.addEventListener('input', () => {
   tmdbTimeout = setTimeout(() => searchTMDB(query), 400);
 });
 
+// Search TMDB
 async function searchTMDB(query) {
   tmdbResultsList.innerHTML = '<li class="text-sm text-gray-300">Searching...</li>';
   tmdbResultsList.classList.remove('hidden');
@@ -374,6 +404,7 @@ async function searchTMDB(query) {
   });
 }
 
+// Add From TMDB
 async function addMovieFromTMDB(movie) {
   const {
     data: { user }
