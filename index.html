@@ -4,15 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Movie Mojo</title>
-  
+
+  <!-- ✅ TailwindCSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- ✅ App Manifest (Android/Chrome) -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#06b6d4" />
-  <link rel="apple-touch-icon" href="/icon-192.png">
 
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- ✅ iOS Home Screen Icon -->
+  <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+
+  <!-- ✅ PWA: Standalone fullscreen on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Movie Mojo" />
+
+  <!-- ✅ Supabase & App Script -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script defer src="app.js"></script>
 </head>
+
 <body class="bg-gradient-to-b from-indigo-900 via-slate-900 to-gray-800 min-h-screen text-white font-sans">
 
   <div id="ios-banner" class="hidden fixed bottom-20 left-4 right-4 bg-yellow-100 text-yellow-900 px-4 py-3 rounded-lg shadow-md z-50 flex justify-between items-center">
