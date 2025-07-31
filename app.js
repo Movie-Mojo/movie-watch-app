@@ -489,3 +489,21 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('Service Worker registration failed:', err));
   });
 }
+
+// ✅ Show iOS Install Banner
+function isiOS() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+         !window.matchMedia('(display-mode: standalone)').matches;
+}
+
+if (isiOS() && !localStorage.getItem('dismissedIosBanner')) {
+  const iosBanner = document.getElementById('ios-banner');
+  const dismissBtn = document.getElementById('dismiss-ios-banner');
+
+  iosBanner.classList.remove('hidden');
+
+  dismissBtn.onclick = () => {
+    iosBanner.classList.add('hidden');
+    localStorage.setItem('dismissedIosBanner', 'true');
+  };
+}
