@@ -164,18 +164,8 @@ async function loadGroups() {
   authSection.classList.add('hidden');
   mainSection.classList.remove('hidden');
 
-  // Fetch groups the user belongs to (basic data)
   const { data, error } = await supabaseClient
-    .from('group_members')
-    .select(`
-      group_id,
-      groups (
-        id,
-        name,
-        created_by
-      )
-    `)
-    .eq('user_id', user.id);
+    .rpc('get_user_groups_with_counts', { uid: user.id });
 
   groupList.innerHTML = '';
 
@@ -188,34 +178,25 @@ async function loadGroups() {
   if (data.length === 0) {
     groupList.innerHTML = '<li class="text-sm text-gray-300">No groups yet.</li>';
   } else {
-    for (const gm of data) {
-      const group = gm.groups;
-
-      // Fetch member count for this group
-      const { count: memberCount } = await supabaseClient
-        .from('group_members')
-        .select('*', { count: 'exact', head: true })
-        .eq('group_id', gm.group_id);
-
+    data.forEach((group) => {
       const li = document.createElement('li');
       li.className = 'bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center';
 
       const info = document.createElement('div');
       info.className = 'cursor-pointer';
-      info.title = gm.group_id;
+      info.title = group.group_id;
       info.onclick = () => {
-        currentGroupId = gm.group_id;
-        groupNameTitle.textContent = `Group: ${group.name}`;
-        document.getElementById('group-join-code').textContent = `Join Code: ${gm.group_id}`;
+        currentGroupId = group.group_id;
+        groupNameTitle.textContent = `Group: ${group.group_name}`;
+        document.getElementById('group-join-code').textContent = `Join Code: ${group.group_id}`;
         mainSection.classList.add('hidden');
         groupDetailSection.classList.remove('hidden');
         loadMovies();
       };
 
-      const memberCountDisplay = memberCount || 0;
       info.innerHTML = `
-        <div class="font-semibold">${group.name}</div>
-        <div class="text-xs text-gray-300">${memberCountDisplay} member${memberCountDisplay === 1 ? '' : 's'}</div>
+        <div class="font-semibold">${group.group_name}</div>
+        <div class="text-xs text-gray-300">${group.member_count} member${group.member_count === 1 ? '' : 's'}</div>
       `;
 
       const actionBtn = document.createElement('button');
@@ -226,8 +207,8 @@ async function loadGroups() {
         actionBtn.title = 'Delete group';
         actionBtn.onclick = async (e) => {
           e.stopPropagation();
-          if (confirm(`Delete "${group.name}" and all its data?`)) {
-            await deleteGroup(gm.group_id);
+          if (confirm(`Delete "${group.group_name}" and all its data?`)) {
+            await deleteGroup(group.group_id);
             loadGroups();
           }
         };
@@ -236,12 +217,12 @@ async function loadGroups() {
         actionBtn.title = 'Leave group';
         actionBtn.onclick = async (e) => {
           e.stopPropagation();
-          if (confirm(`Leave group "${group.name}"?`)) {
+          if (confirm(`Leave group "${group.group_name}"?`)) {
             await supabaseClient
               .from('group_members')
               .delete()
               .eq('user_id', user.id)
-              .eq('group_id', gm.group_id);
+              .eq('group_id', group.group_id);
             loadGroups();
           }
         };
@@ -250,9 +231,10 @@ async function loadGroups() {
       li.appendChild(info);
       li.appendChild(actionBtn);
       groupList.appendChild(li);
-    }
+    });
   }
 }
+
 
 
 
