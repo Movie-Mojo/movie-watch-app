@@ -568,3 +568,18 @@ if (isiOS() && !localStorage.getItem('dismissedIosBanner')) {
     localStorage.setItem('dismissedIosBanner', 'true');
   };
 }
+
+PullToRefresh.init({
+  mainElement: currentGroupId ? '#group-detail-section' : '#main-section',
+  onRefresh() {
+    if (currentGroupId) {
+      return loadMovies();
+    } else {
+      return loadGroups();
+    }
+  },
+  instructionsPullToRefresh: '↓ Pull down to refresh',
+  instructionsReleaseToRefresh: '↻ Release to refresh',
+  instructionsRefreshing: 'Refreshing…',
+});
+
