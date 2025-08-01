@@ -517,22 +517,29 @@ addMovieManualBtn.onclick = async () => {
 };
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
+  // Always show the app wrapper after Supabase has responded
+  document.getElementById('app').classList.remove('hidden');
+
+  // Always hide all sections first
+  authSection.classList.add('hidden');
+  mainSection.classList.add('hidden');
+  groupDetailSection.classList.add('hidden');
+
   if (session) {
     const savedGroupId = localStorage.getItem('lastGroupId');
     if (savedGroupId) {
       currentGroupId = savedGroupId;
-      mainSection.classList.add('hidden');
       groupDetailSection.classList.remove('hidden');
       loadGroupDetails(savedGroupId);
     } else {
+      mainSection.classList.remove('hidden');
       loadGroups();
     }
   } else {
     authSection.classList.remove('hidden');
-    mainSection.classList.add('hidden');
-    groupDetailSection.classList.add('hidden');
   }
 });
+
 
 
 // ✅ Register Service Worker (PWA support)
