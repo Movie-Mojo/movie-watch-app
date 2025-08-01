@@ -309,9 +309,11 @@ if (entry.movies.tmdb_id) {
 }
 
 textBlock.appendChild(titleEl);
-textBlock.innerHTML += `
-  <div class="text-xs text-gray-300">${entry.movies.release_year || ''}</div>
-`;
+
+const yearEl = document.createElement('div');
+yearEl.className = 'text-xs text-gray-300';
+yearEl.textContent = entry.movies.release_year || '';
+textBlock.appendChild(yearEl);
 
 
 // Add streaming providers
