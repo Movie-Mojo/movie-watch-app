@@ -37,6 +37,7 @@ backToGroupsBtn.onclick = () => {
   groupDetailSection.classList.add('hidden');
   mainSection.classList.remove('hidden');
   currentGroupId = null;
+  localStorage.removeItem('lastGroupId');
 };
 
 // Login
@@ -188,6 +189,7 @@ async function loadGroups() {
       info.title = group.group_id;
       info.onclick = () => {
         currentGroupId = group.group_id;
+        localStorage.setItem('lastGroupId', group.group_id);
         groupNameTitle.textContent = `Group: ${group.group_name}`;
         document.getElementById('group-join-code').textContent = `Join Code: ${group.group_id}`;
         mainSection.classList.add('hidden');
@@ -383,6 +385,28 @@ li.appendChild(controls);
   }
 }
 
+//Load Group Details - Helps with persistence across refreshes
+async function loadGroupDetails(groupId) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const { data: group, error } = await supabaseClient
+    .from('groups')
+    .select('id, name')
+    .eq('id', groupId)
+    .single();
+
+  if (error || !group) {
+    console.warn('Group not found or no longer accessible.');
+    localStorage.removeItem('lastGroupId');
+    loadGroups();
+    return;
+  }
+
+  groupNameTitle.textContent = `Group: ${group.name}`;
+  document.getElementById('group-join-code').textContent = `Join Code: ${group.id}`;
+  loadMovies();
+}
+
+
 newMovieTitleInput.addEventListener('input', () => {
   clearTimeout(tmdbTimeout);
   const query = newMovieTitleInput.value.trim();
@@ -497,7 +521,15 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     authSection.classList.remove('hidden');
     mainSection.classList.add('hidden');
     groupDetailSection.classList.add('hidden');
+    loadGroupDetails(savedGroupId);
+  } else {
+    loadGroups();
   }
+} else {
+  authSection.classList.remove('hidden');
+  mainSection.classList.add('hidden');
+  groupDetailSection.classList.add('hidden');
+}
 });
 
 // ✅ Register Service Worker (PWA support)
