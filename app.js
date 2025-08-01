@@ -288,10 +288,29 @@ if (entry.movies.poster_url) {
 }
 
 const textBlock = document.createElement('div');
-textBlock.innerHTML = `
-  <div class="font-semibold">${entry.movies.title}</div>
+const titleEl = document.createElement('div');
+titleEl.className = "font-semibold text-cyan-300 hover:underline cursor-pointer";
+titleEl.textContent = entry.movies.title;
+
+if (entry.movies.tmdb_id) {
+  fetch(`https://api.themoviedb.org/3/movie/${entry.movies.tmdb_id}/external_ids?api_key=${TMDB_API_KEY}`)
+    .then(res => res.json())
+    .then(json => {
+      if (json.imdb_id) {
+        titleEl.onclick = () => {
+          window.open(`https://www.imdb.com/title/${json.imdb_id}`, '_blank');
+        };
+        titleEl.title = "Open in IMDb";
+      }
+    })
+    .catch(err => console.error(`IMDb ID fetch failed for ${entry.movies.title}`, err));
+}
+
+textBlock.appendChild(titleEl);
+textBlock.innerHTML += `
   <div class="text-xs text-gray-300">${entry.movies.release_year || ''}</div>
 `;
+
 
 // Add streaming providers
 if (entry.movies.tmdb_id) {
