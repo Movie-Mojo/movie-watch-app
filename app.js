@@ -2,8 +2,6 @@
 const joinGroupCodeInput = document.getElementById('join-group-code');
 const joinGroupBtn = document.getElementById('join-group-btn');
 
-const refreshBtn = document.getElementById('refresh-btn');
-
 const groupDetailSection = document.getElementById('group-detail-section');
 const backToGroupsBtn = document.getElementById('back-to-groups');
 const groupNameTitle = document.getElementById('group-name-title');
@@ -86,7 +84,6 @@ logoutBtn.onclick = async () => {
   location.reload();
 };
 
-// Refresh Button
 // Refresh Button
 const refreshBtn = document.getElementById('refresh-btn');
 
