@@ -14,10 +14,9 @@ const createGroupBtn = document.getElementById('create-group-btn');
 const newGroupNameInput = document.getElementById('new-group-name');
 const SUPABASE_URL = 'https://fhynhdekctvstiolykgo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoeW5oZGVrY3R2c3Rpb2x5a2dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MDQxMjMsImV4cCI6MjA2OTM4MDEyM30.JdV5Qy8135nCp1jnozAaZ5tcEE2CaMlBUZjnNEg0tvM';
-const TMDB_API_KEY = '432c97c5d26a7a17fd6f4897a4cf4649'; 
+const TMDB_API_KEY = '432c97c5d26a7a17fd6f4897a4cf4649';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 
 // Auth Elements
 const emailInput = document.getElementById('email');
@@ -63,10 +62,7 @@ signupBtn.onclick = async () => {
     return;
   }
 
-  const { error } = await supabaseClient.auth.signUp({
-    email,
-    password,
-  });
+  const { error } = await supabaseClient.auth.signUp({ email, password });
 
   if (error) {
     alert("Signup failed: " + error.message);
@@ -74,8 +70,6 @@ signupBtn.onclick = async () => {
     alert("Account created! Please wait for approval.");
   }
 };
-
-
 
 // Logout
 logoutBtn.onclick = async () => {
@@ -91,7 +85,7 @@ createGroupBtn.onclick = async () => {
     return;
   }
   const {
-    data: { user }
+    data: { user },
   } = await supabaseClient.auth.getUser();
 
   const { data: groupData, error: groupError } = await supabaseClient
@@ -120,54 +114,52 @@ createGroupBtn.onclick = async () => {
   await loadGroups();
 };
 
-  joinGroupBtn.onclick = async () => {
-    const code = joinGroupCodeInput.value.trim();
-    if (!code) return;
+// Join Group
+joinGroupBtn.onclick = async () => {
+  const code = joinGroupCodeInput.value.trim();
+  if (!code) return;
 
-    const {
-      data: { user }
-    } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
 
-    const { data: group, error } = await supabaseClient
-      .from('groups')
-      .select('id, name')
-      .eq('id', code)
-      .single();
+  const { data: group, error } = await supabaseClient
+    .from('groups')
+    .select('id, name')
+    .eq('id', code)
+    .single();
 
-    if (error || !group) {
-      alert("Group not found.");
-      return;
-    }
+  if (error || !group) {
+    alert("Group not found.");
+    return;
+  }
 
-    const { error: memberError } = await supabaseClient
-      .from('group_members')
-      .insert({ user_id: user.id, group_id: group.id });
+  const { error: memberError } = await supabaseClient
+    .from('group_members')
+    .insert({ user_id: user.id, group_id: group.id });
 
-    if (memberError) {
-      alert("You're already a member of this group or join failed.");
-      console.error(memberError);
-      return;
-    }
+  if (memberError) {
+    alert("You're already a member of this group or join failed.");
+    console.error(memberError);
+    return;
+  }
 
-    joinGroupCodeInput.value = '';
-    alert(`Joined group: ${group.name}`);
-    loadGroups();
-  };
-
-
+  joinGroupCodeInput.value = '';
+  alert(`Joined group: ${group.name}`);
+  loadGroups();
+};
 
 // Load Watch Groups
 async function loadGroups() {
   const {
-    data: { user }
+    data: { user },
   } = await supabaseClient.auth.getUser();
   if (!user) return;
 
   authSection.classList.add('hidden');
   mainSection.classList.remove('hidden');
 
-  const { data, error } = await supabaseClient
-    .rpc('get_user_groups_with_counts', { uid: user.id });
+  const { data, error } = await supabaseClient.rpc('get_user_groups_with_counts', { uid: user.id });
 
   groupList.innerHTML = '';
 
@@ -181,8 +173,9 @@ async function loadGroups() {
     groupList.innerHTML = '<li class="text-sm text-gray-300">No groups yet.</li>';
   } else {
     data.forEach((group) => {
+      // PRETTIER CARD
       const li = document.createElement('li');
-      li.className = 'bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center';
+      li.className = 'group relative overflow-hidden rounded-2xl bg-slate-800/70 border border-white/5 p-4 shadow hover:shadow-lg transition-all duration-200';
 
       const info = document.createElement('div');
       info.className = 'cursor-pointer';
@@ -198,12 +191,19 @@ async function loadGroups() {
       };
 
       info.innerHTML = `
-        <div class="font-semibold">${group.group_name}</div>
-        <div class="text-xs text-gray-300">${group.member_count} member${group.member_count === 1 ? '' : 's'}</div>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold text-white">${group.group_name}</div>
+            <div class="text-xs text-gray-400">${group.member_count} member${group.member_count === 1 ? '' : 's'}</div>
+          </div>
+          <span class="shrink-0 rounded-full bg-cyan-400/20 text-cyan-300 text-[10px] font-semibold px-2 py-1 border border-cyan-400/30">
+            ID
+          </span>
+        </div>
       `;
 
       const actionBtn = document.createElement('button');
-      actionBtn.className = 'text-sm text-red-400 hover:text-red-500';
+      actionBtn.className = 'text-sm text-red-300 hover:text-red-200 bg-red-500/10 hover:bg-red-500/20 rounded-lg px-3 py-1 transition';
 
       if (group.created_by === user.id) {
         actionBtn.textContent = '🗑 Delete';
@@ -238,17 +238,11 @@ async function loadGroups() {
   }
 }
 
-
-
-
 // Delete Watch Groups
 async function deleteGroup(groupId) {
   try {
-    // Delete related data first
     await supabaseClient.from('group_movies').delete().eq('group_id', groupId);
     await supabaseClient.from('group_members').delete().eq('group_id', groupId);
-
-    // Attempt to delete the group
     const { error } = await supabaseClient.from('groups').delete().eq('id', groupId);
     if (error) throw error;
   } catch (err) {
@@ -262,7 +256,7 @@ async function loadMovies() {
   const { data, error } = await supabaseClient
     .from('group_movies')
     .select('id, watched, movie_id, movies(title, poster_url, release_year, tmdb_id)')
-    .eq('group_id', currentGroupId)
+    .eq('group_id', currentGroupId);
 
   movieList.innerHTML = '';
 
@@ -274,122 +268,123 @@ async function loadMovies() {
   if (data.length === 0) {
     movieList.innerHTML = '<li class="text-sm text-gray-300">No movies yet.</li>';
   } else {
-    data.sort((a, b) => a.watched - b.watched); 
+    data.sort((a, b) => a.watched - b.watched);
     data.forEach((entry) => {
+      // PRETTIER CARD
       const li = document.createElement('li');
-      li.className = `bg-slate-700 p-3 rounded shadow text-white flex justify-between items-center`;
+      li.className = 'relative overflow-hidden rounded-2xl bg-slate-800/70 border border-white/5 p-3 shadow hover:shadow-md transition';
 
-const content = document.createElement('div');
-content.className = 'flex items-center gap-3';
+      const content = document.createElement('div');
+      content.className = 'flex items-center gap-3';
 
-if (entry.movies.poster_url) {
-  const poster = document.createElement('img');
-  poster.src = entry.movies.poster_url;
-  poster.className = 'w-12 rounded shadow';
-  content.appendChild(poster);
-}
-
-const textBlock = document.createElement('div');
-const titleEl = document.createElement('div');
-titleEl.className = "font-semibold text-cyan-300 hover:underline cursor-pointer";
-titleEl.textContent = entry.movies.title;
-
-if (entry.movies.tmdb_id) {
-  fetch(`https://api.themoviedb.org/3/movie/${entry.movies.tmdb_id}/external_ids?api_key=${TMDB_API_KEY}`)
-    .then(res => res.json())
-    .then(json => {
-      if (json.imdb_id) {
-        titleEl.onclick = () => {
-          window.open(`https://www.imdb.com/title/${json.imdb_id}`, '_blank');
-        };
-        titleEl.title = "Open in IMDb";
+      if (entry.movies.poster_url) {
+        const poster = document.createElement('img');
+        poster.src = entry.movies.poster_url;
+        poster.className = 'w-12 h-16 object-cover rounded-lg shadow ring-1 ring-white/10';
+        poster.alt = `${entry.movies.title} poster`;
+        content.appendChild(poster);
       }
-    })
-    .catch(err => console.error(`IMDb ID fetch failed for ${entry.movies.title}`, err));
-}
 
-textBlock.appendChild(titleEl);
+      const textBlock = document.createElement('div');
+      textBlock.className = 'min-w-0';
 
-const yearEl = document.createElement('div');
-yearEl.className = 'text-xs text-gray-300';
-yearEl.textContent = entry.movies.release_year || '';
-textBlock.appendChild(yearEl);
+      const titleEl = document.createElement('div');
+      titleEl.className = 'font-semibold text-cyan-300 hover:underline cursor-pointer truncate';
+      titleEl.textContent = entry.movies.title;
 
-
-// Add streaming providers
-if (entry.movies.tmdb_id) {
-  fetch(`https://api.themoviedb.org/3/movie/${entry.movies.tmdb_id}/watch/providers?api_key=${TMDB_API_KEY}`)
-    .then(res => res.json())
-    .then(json => {
-      const providers = json.results?.US?.flatrate || [];
-      if (providers.length > 0) {
-        const providerContainer = document.createElement('div');
-        providerContainer.className = 'flex gap-2 mt-1';
-
-        providers.forEach(provider => {
-          const logo = document.createElement('img');
-          logo.src = `https://image.tmdb.org/t/p/w45${provider.logo_path}`;
-          logo.alt = provider.provider_name;
-          logo.title = provider.provider_name;
-          logo.className = 'w-6 h-6 rounded';
-          providerContainer.appendChild(logo);
-        });
-
-        textBlock.appendChild(providerContainer);
+      if (entry.movies.tmdb_id) {
+        fetch(`https://api.themoviedb.org/3/movie/${entry.movies.tmdb_id}/external_ids?api_key=${TMDB_API_KEY}`)
+          .then((res) => res.json())
+          .then((json) => {
+            if (json.imdb_id) {
+              titleEl.onclick = () => {
+                window.open(`https://www.imdb.com/title/${json.imdb_id}`, '_blank');
+              };
+              titleEl.title = 'Open in IMDb';
+            }
+          })
+          .catch((err) => console.error(`IMDb ID fetch failed for ${entry.movies.title}`, err));
       }
-    })
-    .catch(err => {
-      console.error(`Failed to load watch providers for ${entry.movies.title}`, err);
-    });
-}
-      
-content.appendChild(textBlock);
 
+      textBlock.appendChild(titleEl);
+
+      const yearEl = document.createElement('div');
+      yearEl.className = 'text-xs text-gray-400';
+      yearEl.textContent = entry.movies.release_year || '';
+      textBlock.appendChild(yearEl);
+
+      // Streaming providers
+      if (entry.movies.tmdb_id) {
+        fetch(`https://api.themoviedb.org/3/movie/${entry.movies.tmdb_id}/watch/providers?api_key=${TMDB_API_KEY}`)
+          .then((res) => res.json())
+          .then((json) => {
+            const providers = json.results?.US?.flatrate || [];
+            if (providers.length > 0) {
+              const providerContainer = document.createElement('div');
+              providerContainer.className = 'flex flex-wrap gap-2 mt-2';
+
+              providers.forEach((provider) => {
+                const logo = document.createElement('img');
+                logo.src = `https://image.tmdb.org/t/p/w45${provider.logo_path}`;
+                logo.alt = provider.provider_name;
+                logo.title = provider.provider_name;
+                logo.className = 'w-6 h-6 rounded-md ring-1 ring-white/10 shadow-sm';
+                providerContainer.appendChild(logo);
+              });
+
+              textBlock.appendChild(providerContainer);
+            }
+          })
+          .catch((err) => {
+            console.error(`Failed to load watch providers for ${entry.movies.title}`, err);
+          });
+      }
+
+      content.appendChild(textBlock);
+
+      // Controls
+      const controls = document.createElement('div');
+      controls.className = 'flex items-center gap-2 ml-auto';
 
       const toggle = document.createElement('button');
-      toggle.textContent = entry.watched ? '✅ Watched' : '👀 To Watch';
+      toggle.textContent = entry.watched ? 'Watched' : 'To Watch';
       toggle.className = entry.watched
-        ? 'text-green-400 hover:underline'
-        : 'text-yellow-400 hover:underline';
+        ? 'text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/30 rounded-lg px-3 py-1 text-sm transition'
+        : 'text-yellow-300 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-400/30 rounded-lg px-3 py-1 text-sm transition';
 
       toggle.onclick = async () => {
-        await supabaseClient
-          .from('group_movies')
-          .update({ watched: !entry.watched })
-          .eq('id', entry.id);
+        await supabaseClient.from('group_movies').update({ watched: !entry.watched }).eq('id', entry.id);
         loadMovies();
       };
 
-      const controls = document.createElement('div');
-controls.className = 'flex items-center gap-3';
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML = '🗑';
+      delBtn.title = 'Delete movie';
+      delBtn.className = 'text-red-300 hover:text-red-200 bg-red-500/10 hover:bg-red-500/20 border border-red-400/30 rounded-lg px-2 py-1 text-base transition';
+      delBtn.onclick = async () => {
+        if (confirm(`Delete "${entry.movies.title}" from group?`)) {
+          await supabaseClient.from('group_movies').delete().eq('id', entry.id);
+          loadMovies();
+        }
+      };
 
-controls.appendChild(toggle);
+      const controlsWrap = document.createElement('div');
+      controlsWrap.className = 'flex items-center gap-3';
+      controlsWrap.appendChild(toggle);
+      controlsWrap.appendChild(delBtn);
 
-// 🗑 Delete button
-const delBtn = document.createElement('button');
-delBtn.innerHTML = '🗑';
-delBtn.title = 'Delete movie';
-delBtn.className = 'text-red-400 hover:text-red-500 text-lg';
-delBtn.onclick = async () => {
-  if (confirm(`Delete "${entry.movies.title}" from group?`)) {
-    await supabaseClient.from('group_movies').delete().eq('id', entry.id);
-    loadMovies();
-  }
-};
-
-controls.appendChild(delBtn);
-
-li.appendChild(content);
-li.appendChild(controls);
-
+      li.appendChild(content);
+      li.appendChild(controlsWrap);
       movieList.appendChild(li);
     });
   }
 }
 
-//Load Group Details - Helps with persistence across refreshes
+// Load Group Details - Helps with persistence across refreshes
 async function loadGroupDetails(groupId) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
   const { data: group, error } = await supabaseClient
     .from('groups')
     .select('id, name')
@@ -408,7 +403,6 @@ async function loadGroupDetails(groupId) {
   loadMovies();
 }
 
-
 newMovieTitleInput.addEventListener('input', () => {
   clearTimeout(tmdbTimeout);
   const query = newMovieTitleInput.value.trim();
@@ -425,7 +419,9 @@ async function searchTMDB(query) {
   tmdbResultsList.innerHTML = '<li class="text-sm text-gray-300">Searching...</li>';
   tmdbResultsList.classList.remove('hidden');
 
-  const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+  const res = await fetch(
+    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`
+  );
   const json = await res.json();
 
   if (!json.results || json.results.length === 0) {
@@ -434,11 +430,16 @@ async function searchTMDB(query) {
   }
 
   tmdbResultsList.innerHTML = '';
-  json.results.slice(0, 5).forEach(movie => {
+  json.results.slice(0, 5).forEach((movie) => {
     const li = document.createElement('li');
-    li.className = 'cursor-pointer hover:bg-slate-600 p-2 rounded flex items-center gap-3';
+    li.className =
+      'cursor-pointer bg-slate-900/60 hover:bg-slate-900/80 p-2 rounded-lg flex items-center gap-3 ring-1 ring-white/5 transition';
     li.innerHTML = `
-      ${movie.poster_path ? `<img src="https://image.tmdb.org/t/p/w92${movie.poster_path}" class="w-10 rounded" />` : ''}
+      ${
+        movie.poster_path
+          ? `<img src="https://image.tmdb.org/t/p/w92${movie.poster_path}" class="w-10 h-14 object-cover rounded-md ring-1 ring-white/10" />`
+          : ''
+      }
       <div>
         <div class="font-semibold">${movie.title}</div>
         <div class="text-xs text-gray-300">${movie.release_date?.split('-')[0] || 'N/A'}</div>
@@ -452,7 +453,7 @@ async function searchTMDB(query) {
 // Add From TMDB
 async function addMovieFromTMDB(movie) {
   const {
-    data: { user }
+    data: { user },
   } = await supabaseClient.auth.getUser();
 
   const { data: insertedMovie, error } = await supabaseClient
@@ -461,13 +462,13 @@ async function addMovieFromTMDB(movie) {
       title: movie.title,
       tmdb_id: movie.id.toString(),
       release_year: parseInt(movie.release_date?.split('-')[0]) || null,
-      poster_url: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null
+      poster_url: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null,
     })
     .select()
     .single();
 
   if (error) {
-    alert("Failed to add movie.");
+    alert('Failed to add movie.');
     console.error(error);
     return;
   }
@@ -475,7 +476,7 @@ async function addMovieFromTMDB(movie) {
   await supabaseClient.from('group_movies').insert({
     group_id: currentGroupId,
     movie_id: insertedMovie.id,
-    added_by: user.id
+    added_by: user.id,
   });
 
   newMovieTitleInput.value = '';
@@ -489,7 +490,7 @@ addMovieManualBtn.onclick = async () => {
   if (!title || !currentGroupId) return;
 
   const {
-    data: { user }
+    data: { user },
   } = await supabaseClient.auth.getUser();
 
   const { data: movie, error: movieError } = await supabaseClient
@@ -499,7 +500,7 @@ addMovieManualBtn.onclick = async () => {
     .single();
 
   if (movieError) {
-    alert("Failed to add movie manually.");
+    alert('Failed to add movie manually.');
     console.error(movieError);
     return;
   }
@@ -507,7 +508,7 @@ addMovieManualBtn.onclick = async () => {
   await supabaseClient.from('group_movies').insert({
     group_id: currentGroupId,
     movie_id: movie.id,
-    added_by: user.id
+    added_by: user.id,
   });
 
   newMovieTitleInput.value = '';
@@ -516,11 +517,12 @@ addMovieManualBtn.onclick = async () => {
   loadMovies();
 };
 
+// Auth state gate + view routing
 supabaseClient.auth.onAuthStateChange((event, session) => {
   // Always show the app wrapper after Supabase has responded
   document.getElementById('app').classList.remove('hidden');
 
-  // Always hide all sections first
+  // Hide all sections first
   authSection.classList.add('hidden');
   mainSection.classList.add('hidden');
   groupDetailSection.classList.add('hidden');
@@ -540,21 +542,19 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   }
 });
 
-
-
-// ✅ Register Service Worker (PWA support)
+// Register Service Worker (PWA)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker registered:', reg.scope))
-      .catch(err => console.error('Service Worker registration failed:', err));
+    navigator.serviceWorker
+      .register('./sw.js')
+      .then((reg) => console.log('Service Worker registered:', reg.scope))
+      .catch((err) => console.error('Service Worker registration failed:', err));
   });
 }
 
-// ✅ Show iOS Install Banner
+// iOS A2HS banner
 function isiOS() {
-  return /iPhone|iPad|iPod/.test(navigator.userAgent) &&
-         !window.matchMedia('(display-mode: standalone)').matches;
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches;
 }
 
 if (isiOS() && !localStorage.getItem('dismissedIosBanner')) {
@@ -569,17 +569,19 @@ if (isiOS() && !localStorage.getItem('dismissedIosBanner')) {
   };
 }
 
-PullToRefresh.init({
-  mainElement: currentGroupId ? '#group-detail-section' : '#main-section',
-  onRefresh() {
-    if (currentGroupId) {
-      return loadMovies();
-    } else {
-      return loadGroups();
-    }
-  },
-  instructionsPullToRefresh: '↓ Pull down to refresh',
-  instructionsReleaseToRefresh: '↻ Release to refresh',
-  instructionsRefreshing: 'Refreshing…',
-});
-
+// Pull to Refresh (leave as-is per your preference)
+if (window.PullToRefresh) {
+  PullToRefresh.init({
+    mainElement: currentGroupId ? '#group-detail-section' : '#main-section',
+    onRefresh() {
+      if (currentGroupId) {
+        return loadMovies();
+      } else {
+        return loadGroups();
+      }
+    },
+    instructionsPullToRefresh: '↓ Pull down to refresh',
+    instructionsReleaseToRefresh: '↻ Release to refresh',
+    instructionsRefreshing: 'Refreshing…',
+  });
+}
