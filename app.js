@@ -270,12 +270,12 @@ async function loadMovies() {
   } else {
     data.sort((a, b) => a.watched - b.watched);
     data.forEach((entry) => {
-      // PRETTIER CARD
+      // PRETTIER CARD — now flex row so controls are on the right
       const li = document.createElement('li');
-      li.className = 'relative overflow-hidden rounded-2xl bg-slate-800/70 border border-white/5 p-3 shadow hover:shadow-md transition';
+      li.className = 'relative overflow-hidden rounded-2xl bg-slate-800/70 border border-white/5 p-3 shadow hover:shadow-md transition flex items-center justify-between gap-3';
 
       const content = document.createElement('div');
-      content.className = 'flex items-center gap-3';
+      content.className = 'flex items-center gap-3 min-w-0';
 
       if (entry.movies.poster_url) {
         const poster = document.createElement('img');
@@ -342,9 +342,9 @@ async function loadMovies() {
 
       content.appendChild(textBlock);
 
-      // Controls
-      const controls = document.createElement('div');
-      controls.className = 'flex items-center gap-2 ml-auto';
+      // Controls on the RIGHT
+      const controlsWrap = document.createElement('div');
+      controlsWrap.className = 'flex items-center gap-3 shrink-0';
 
       const toggle = document.createElement('button');
       toggle.textContent = entry.watched ? 'Watched' : 'To Watch';
@@ -368,13 +368,11 @@ async function loadMovies() {
         }
       };
 
-      const controlsWrap = document.createElement('div');
-      controlsWrap.className = 'flex items-center gap-3';
       controlsWrap.appendChild(toggle);
       controlsWrap.appendChild(delBtn);
 
-      li.appendChild(content);
-      li.appendChild(controlsWrap);
+      li.appendChild(content);      // left
+      li.appendChild(controlsWrap); // right
       movieList.appendChild(li);
     });
   }
@@ -569,7 +567,7 @@ if (isiOS() && !localStorage.getItem('dismissedIosBanner')) {
   };
 }
 
-// Pull to Refresh (leave as-is per your preference)
+// Pull to Refresh (as-is)
 if (window.PullToRefresh) {
   PullToRefresh.init({
     mainElement: currentGroupId ? '#group-detail-section' : '#main-section',
