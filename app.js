@@ -18,6 +18,13 @@ const TMDB_API_KEY = '432c97c5d26a7a17fd6f4897a4cf4649';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let tmdbSearchState = {
+  query: '',
+  page: 1,
+  totalPages: 1,
+  busy: false
+};
+
 // Auth Elements
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
@@ -404,48 +411,103 @@ async function loadGroupDetails(groupId) {
 newMovieTitleInput.addEventListener('input', () => {
   clearTimeout(tmdbTimeout);
   const query = newMovieTitleInput.value.trim();
+
   if (!query) {
     tmdbResultsList.classList.add('hidden');
     tmdbResultsList.innerHTML = '';
     return;
   }
-  tmdbTimeout = setTimeout(() => searchTMDB(query), 400);
+
+  tmdbTimeout = setTimeout(() => {
+    // reset paging when query changes
+    tmdbSearchState = { query, page: 1, totalPages: 1, busy: false };
+    searchTMDB({ append: false });
+  }, 350);
+});
+
+// Optional: click outside to close results
+document.addEventListener('click', (e) => {
+  if (!tmdbResultsList.contains(e.target) && e.target !== newMovieTitleInput) {
+    tmdbResultsList.classList.add('hidden');
+  }
 });
 
 // Search TMDB
-async function searchTMDB(query) {
-  tmdbResultsList.innerHTML = '<li class="text-sm text-gray-300">Searching...</li>';
+async function searchTMDB({ append = false } = {}) {
+  const query = tmdbSearchState.query.trim();
+  if (!query || tmdbSearchState.busy) return;
+
+  tmdbSearchState.busy = true;
   tmdbResultsList.classList.remove('hidden');
 
-  const res = await fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`
-  );
-  const json = await res.json();
-
-  if (!json.results || json.results.length === 0) {
-    tmdbResultsList.innerHTML = '<li class="text-sm text-red-400">No matches found</li>';
-    return;
+  if (!append) {
+    tmdbResultsList.innerHTML = '<li class="text-sm text-gray-300 px-2 py-1">Searching...</li>';
+  } else {
+    // remove any existing "Load more" row before appending
+    const moreRow = tmdbResultsList.querySelector('[data-load-more]');
+    if (moreRow) moreRow.remove();
   }
 
-  tmdbResultsList.innerHTML = '';
-  json.results.slice(0, 5).forEach((movie) => {
-    const li = document.createElement('li');
-    li.className =
-      'cursor-pointer bg-slate-900/60 hover:bg-slate-900/80 p-2 rounded-lg flex items-center gap-3 ring-1 ring-white/5 transition';
-    li.innerHTML = `
-      ${
-        movie.poster_path
-          ? `<img src="https://image.tmdb.org/t/p/w92${movie.poster_path}" class="w-10 h-14 object-cover rounded-md ring-1 ring-white/10" />`
-          : ''
-      }
-      <div>
-        <div class="font-semibold">${movie.title}</div>
-        <div class="text-xs text-gray-300">${movie.release_date?.split('-')[0] || 'N/A'}</div>
-      </div>
-    `;
-    li.onclick = () => addMovieFromTMDB(movie);
-    tmdbResultsList.appendChild(li);
-  });
+  try {
+    const url = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${tmdbSearchState.page}`;
+    const res = await fetch(url);
+    const json = await res.json();
+
+    tmdbSearchState.totalPages = json.total_pages || 1;
+
+    if (!append) {
+      tmdbResultsList.innerHTML = '';
+    }
+
+    const results = Array.isArray(json.results) ? json.results : [];
+    if (!append && results.length === 0) {
+      tmdbResultsList.innerHTML = '<li class="text-sm text-red-400 px-2 py-1">No matches found</li>';
+      return;
+    }
+
+    // render up to 20 per page (TMDB returns up to 20 by default)
+    results.forEach(movie => {
+      const li = document.createElement('li');
+      li.className = 'cursor-pointer bg-slate-900/60 hover:bg-slate-900/80 p-2 rounded-lg flex items-center gap-3 ring-1 ring-white/5 transition';
+
+      li.innerHTML = `
+        ${movie.poster_path ? `<img src="https://image.tmdb.org/t/p/w92${movie.poster_path}" class="w-10 h-14 object-cover rounded-md ring-1 ring-white/10" />` : ''}
+        <div class="min-w-0">
+          <div class="font-semibold truncate">${movie.title}</div>
+          <div class="text-xs text-gray-300">${movie.release_date?.split('-')[0] || 'N/A'}</div>
+        </div>
+      `;
+
+      li.onclick = () => {
+        // hide results after selection
+        tmdbResultsList.classList.add('hidden');
+        addMovieFromTMDB(movie);
+      };
+
+      tmdbResultsList.appendChild(li);
+    });
+
+    // add "Load more" if more pages remain
+    if (tmdbSearchState.page < tmdbSearchState.totalPages) {
+      const more = document.createElement('li');
+      more.setAttribute('data-load-more', 'true');
+      more.className = 'mt-2 cursor-pointer text-center text-sm text-cyan-300 hover:text-cyan-200 bg-slate-900/50 hover:bg-slate-900/70 px-3 py-2 rounded-lg ring-1 ring-cyan-400/30 transition';
+      more.textContent = 'Load more results…';
+      more.onclick = () => {
+        tmdbSearchState.page += 1;
+        searchTMDB({ append: true });
+      };
+      tmdbResultsList.appendChild(more);
+    }
+
+  } catch (err) {
+    console.error('TMDB search failed', err);
+    if (!append) {
+      tmdbResultsList.innerHTML = '<li class="text-sm text-red-400 px-2 py-1">Search failed. Try again.</li>';
+    }
+  } finally {
+    tmdbSearchState.busy = false;
+  }
 }
 
 // Add From TMDB
