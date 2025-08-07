@@ -2,6 +2,8 @@
 const joinGroupCodeInput = document.getElementById('join-group-code');
 const joinGroupBtn = document.getElementById('join-group-btn');
 
+const refreshBtn = document.getElementById('refresh-btn');
+
 const groupDetailSection = document.getElementById('group-detail-section');
 const backToGroupsBtn = document.getElementById('back-to-groups');
 const groupNameTitle = document.getElementById('group-name-title');
@@ -83,6 +85,25 @@ logoutBtn.onclick = async () => {
   await supabaseClient.auth.signOut();
   location.reload();
 };
+
+// Refresh Button
+// Refresh Button
+const refreshBtn = document.getElementById('refresh-btn');
+
+refreshBtn.onclick = () => {
+  // Add spin animation
+  refreshBtn.classList.add('animate-spin');
+
+  const refreshPromise = currentGroupId ? loadMovies() : loadGroups();
+
+  Promise.resolve(refreshPromise).finally(() => {
+    // Remove spin after refresh finishes
+    setTimeout(() => {
+      refreshBtn.classList.remove('animate-spin');
+    }, 500); // small delay for a smoother feel
+  });
+};
+
 
 // Create Group
 createGroupBtn.onclick = async () => {
