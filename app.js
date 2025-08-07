@@ -568,7 +568,7 @@ if (isiOS() && !localStorage.getItem('dismissedIosBanner')) {
 }
 
 // Pull to Refresh (as-is)
-if (window.PullToRefresh) {
+/*if (window.PullToRefresh) {
   PullToRefresh.init({
     mainElement: currentGroupId ? '#group-detail-section' : '#main-section',
     onRefresh() {
@@ -582,4 +582,4 @@ if (window.PullToRefresh) {
     instructionsReleaseToRefresh: '↻ Release to refresh',
     instructionsRefreshing: 'Refreshing…',
   });
-}
+}*/
